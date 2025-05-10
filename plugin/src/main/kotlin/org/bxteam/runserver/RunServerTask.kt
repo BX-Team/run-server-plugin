@@ -7,6 +7,8 @@ import org.bxteam.runserver.util.lib.DownloadResultType
 import org.bxteam.runserver.util.lib.TaskLib
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 
 abstract class RunServerTask : AbstractServer() {
     private var allowedRam: String = "2G"
@@ -14,8 +16,6 @@ abstract class RunServerTask : AbstractServer() {
     private var downloads: MutableList<Pair<String, Boolean>> = mutableListOf()
     private var filePlugins: MutableList<Pair<File, Boolean>> = mutableListOf()
     private var acceptEula: Boolean = false
-    private var customJarPath: String? = null
-    private var replaceCustomJar: Boolean = false
     private var customJarName: String? = null
     private var inputTask: TaskProvider<*>? = null
     private var debug: Boolean = false
@@ -125,10 +125,18 @@ abstract class RunServerTask : AbstractServer() {
      * This will run when the task is called
      */
     override fun exec() {
+        val startTime = System.currentTimeMillis()
+        logger.lifecycle("===== Starting Server Setup =====")
+        logger.lifecycle("Time: ${getCurrentTime()}")
+        
         if (minecraftVersion == null) {
             throw IllegalArgumentException("Minecraft version is not set. Please set it with the 'minecraftVersion' property.")
         }
 
+        logger.lifecycle("Minecraft Version: $minecraftVersion")
+        logger.lifecycle("Server Type: ${serverType.name}")
+        logger.lifecycle("Allocated RAM: $allowedRam")
+        
         checkServerVersion()
         setup()
         createFolders()
@@ -136,30 +144,49 @@ abstract class RunServerTask : AbstractServer() {
 
         var download: DownloadResult? = null
 
-        logger.info("Downloading latest jar of type ${serverType.name.lowercase()} version $minecraftVersion...")
+        logger.lifecycle("\n>> Downloading server JAR <<")
+        logger.lifecycle("Server type: ${serverType.name.lowercase()}")
+        logger.lifecycle("Minecraft version: $minecraftVersion")
+        
         download = downloadServerJar()
 
         if (download == null || download.resultType == DownloadResultType.SUCCESS) {
-            setClass(download?.jarFile ?: File(workingDir, customJarName!!))
+            val jarFile = download?.jarFile ?: File(workingDir, customJarName!!)
+            logger.lifecycle("\n>> Server JAR ready: ${jarFile.name} (${formatFileSize(jarFile.length())}) <<")
+            
+            setClass(jarFile)
 
             val slitVersion = minecraftVersion!!.split(".")
             val mainVersion = slitVersion[1].toInt()
             val subVersion = slitVersion.getOrNull(2)?.toIntOrNull() ?: 0
 
-            if (noGui) {
-                if ((mainVersion == 15 && subVersion == 2) || mainVersion > 15) {
-                    args("--nogui")
-                }
-            }
-
             val jvmFlags = mutableListOf("-Xmx$allowedRam")
             if (serverType == ServerType.SPIGOT) jvmFlags.add("-DIReallyKnowWhatIAmDoingISwear")
             if (acceptEula) jvmFlags.add("-Dcom.mojang.eula.agree=true")
-            setJvmArgs(jvmFlags)
+            
+            logger.lifecycle("\n>> JVM Arguments: ${jvmFlags.joinToString(" ")} <<")
+            jvmArgs = jvmFlags
+
+            if (noGui) {
+                if ((mainVersion == 15 && subVersion == 2) || mainVersion > 15) {
+                    logger.lifecycle("Running with --nogui flag")
+                    args("--nogui")
+                } else {
+                    logger.lifecycle("NoGUI flag not supported in this version")
+                }
+            }
+            
+            val setupTime = System.currentTimeMillis() - startTime
+            logger.lifecycle("\n===== Server Setup Complete =====")
+            logger.lifecycle("Setup completed in ${formatTime(setupTime)}")
+            logger.lifecycle("Starting server...")
+            logger.lifecycle("==============================\n")
 
             super.exec()
         } else {
-            logger.error("Download failed. Error [${download.errorMessage}]")
+            logger.error("\n>> Download failed <<")
+            logger.error("Error: ${download.errorMessage}")
+            logger.error("==============================\n")
         }
     }
 
@@ -167,8 +194,16 @@ abstract class RunServerTask : AbstractServer() {
      * This is checking the server version and if it exists.
      */
     private fun checkServerVersion() {
+        logger.lifecycle("\n>> Checking server version compatibility <<")
         serverType.versions().let {
-            if (minecraftVersion !in it) throw VersionNotFoundException(minecraftVersion!!, it)
+            if (it.isEmpty()) {
+                logger.warn("Couldn't retrieve version list, assuming version is compatible")
+            } else if (minecraftVersion !in it) {
+                logger.error("Version $minecraftVersion not found in available versions: $it")
+                throw VersionNotFoundException(minecraftVersion!!, it)
+            } else {
+                logger.lifecycle("Version $minecraftVersion is available for ${serverType.name}")
+            }
         }
     }
 
@@ -183,34 +218,36 @@ abstract class RunServerTask : AbstractServer() {
      * This method will load your plugin and download the rest from the websites or copy them
      */
     private fun loadPlugin() {
-        logger.info("Creating plugin...")
+        logger.lifecycle("\n>> Loading project plugin <<")
         val pluginFile = TaskLib.findPluginJar(project, inputTask, this)
         val inServerFile = File(pluginDir!!, pluginFile.name)
-        logger.info("Copying plugins...")
+        
+        logger.lifecycle("Copying plugin: ${pluginFile.name} (${formatFileSize(pluginFile.length())})")
+        logger.lifecycle("Destination: ${inServerFile.absolutePath}")
+        
         pluginFile.copyTo(inServerFile, true)
-        logger.info("Plugin creation finished")
+        logger.lifecycle("Plugin copied successfully")
 
-        /*
-        downloads.forEach {
-            val pluginName = PluginLib.fileName(it.first, serverType);
-
-            if (!pluginDir!!.listFiles()!!.map { file -> file.name }.contains(pluginName) || it.second) {
-                logger.info("Downloading $pluginName")
-                PluginLib.download(pluginDir!!, it.first, serverType)
-            }
+        if (filePlugins.isNotEmpty()) {
+            logger.lifecycle("\n>> Copying additional plugins <<")
+            copyFilePlugins()
         }
-         */
-
-        copyFilePlugins()
     }
 
     /**
      * This will copy the local plugins into the plugin folder
      */
     private fun copyFilePlugins() {
-        filePlugins.forEach {
-            val pluginFile = File(pluginDir!!, it.first.name)
-            it.first.copyTo(pluginFile, it.second)
+        filePlugins.forEachIndexed { index, (sourceFile, overwrite) ->
+            val pluginFile = File(pluginDir!!, sourceFile.name)
+            logger.lifecycle("${index+1}/${filePlugins.size}: Copying ${sourceFile.name} (${formatFileSize(sourceFile.length())})")
+            
+            if (pluginFile.exists() && !overwrite) {
+                logger.lifecycle("  File already exists, skipping (overwrite=false)")
+            } else {
+                sourceFile.copyTo(pluginFile, overwrite)
+                logger.lifecycle("  Copied successfully" + if(overwrite) " (overwritten)" else "")
+            }
         }
     }
 
@@ -218,13 +255,47 @@ abstract class RunServerTask : AbstractServer() {
      * This will be creating all the folder for the server
      */
     private fun createFolders(){
-        logger.info("Creating server folders...")
+        logger.lifecycle("\n>> Creating server directories <<")
         if (!runDir!!.exists()) {
+            logger.lifecycle("Creating server directory: ${runDir!!.absolutePath}")
             runDir!!.mkdirs()
+        } else {
+            logger.lifecycle("Server directory exists: ${runDir!!.absolutePath}")
         }
+        
         if (!pluginDir!!.exists()) {
+            logger.lifecycle("Creating plugins directory: ${pluginDir!!.absolutePath}")
             pluginDir!!.mkdirs()
+        } else {
+            logger.lifecycle("Plugins directory exists: ${pluginDir!!.absolutePath}")
         }
-        logger.info("Created server folders!")
+        
+        logger.lifecycle("Directories ready")
+    }
+    
+    /**
+     * Get current formatted time
+     */
+    private fun getCurrentTime(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        return dateFormat.format(Date())
+    }
+    
+    /**
+     * Format file size to human-readable format
+     */
+    private fun formatFileSize(size: Long): String {
+        if (size <= 0) return "0 B"
+        val units = arrayOf("B", "KB", "MB", "GB", "TB")
+        val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
+        return String.format("%.2f %s", size / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
+    }
+    
+    /**
+     * Format time in milliseconds to human-readable format
+     */
+    private fun formatTime(timeInMs: Long): String {
+        if (timeInMs < 1000) return "$timeInMs ms"
+        return String.format("%.2f s", timeInMs / 1000.0)
     }
 }

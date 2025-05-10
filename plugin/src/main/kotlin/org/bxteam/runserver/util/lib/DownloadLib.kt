@@ -1,12 +1,14 @@
 package org.bxteam.runserver.util.lib
 
 import com.google.gson.JsonParser
+import org.gradle.api.logging.Logging
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URI
 
 object DownloadLib {
     private const val MCJARS_API_BASE = "https://mcjars.app/api/v2"
+    private val logger = Logging.getLogger(DownloadLib::class.java)
 
     /**
      * This method is used to download Spigot.
@@ -115,16 +117,21 @@ object DownloadLib {
      * @return The result of the download operation
      */
     private fun downloadFromMcJarsApi(folder: File, type: String, minecraftVersion: String): DownloadResult {
+        logger.lifecycle("Downloading $type server for Minecraft version $minecraftVersion...")
         try {
             val url = URI("$MCJARS_API_BASE/builds/$type/$minecraftVersion")
+            logger.debug("Requesting API endpoint: $url")
+            
             val response = JsonParser.parseString(url.toURL().readText()).asJsonObject
 
             if (!response.get("success").asBoolean) {
+                logger.error("API request failed for $type $minecraftVersion")
                 return DownloadResult(DownloadResultType.FAILED, "API request failed", null)
             }
 
             val builds = response.getAsJsonArray("builds")
             if (builds.isEmpty) {
+                logger.error("No builds available for $type $minecraftVersion")
                 return DownloadResult(DownloadResultType.FAILED, "No builds available for $type $minecraftVersion", null)
             }
 
@@ -132,9 +139,13 @@ object DownloadLib {
             val latestBuild = builds.get(0).asJsonObject
             val jarUrl = latestBuild.get("jarUrl").asString
             val outputFileName = type.lowercase() + ".jar"
+            
+            logger.lifecycle("Found latest build for $type $minecraftVersion: ${latestBuild.get("name").asString}")
+            logger.lifecycle("Downloading from $jarUrl")
 
             return downloadFile(folder, jarUrl, outputFileName)
         } catch (exception: Exception) {
+            logger.error("Download failed: ${exception.message}")
             return DownloadResult(DownloadResultType.FAILED, exception.message, null)
         }
     }
@@ -162,18 +173,50 @@ object DownloadLib {
         val file = File(folder, name)
 
         return if (file.exists()) {
+            logger.lifecycle("File $name already exists in ${folder.path}, skipping download")
             DownloadResult(DownloadResultType.SUCCESS, null, file)
         } else {
             try {
-                downloadURL.toURL().openStream().use { input ->
-                    FileOutputStream(file).use { output ->
-                        input.copyTo(output)
+                logger.lifecycle("Downloading file to ${file.absolutePath}")
+                val startTime = System.currentTimeMillis()
+                
+                downloadURL.toURL().openConnection().let { connection ->
+                    val fileSize = connection.contentLengthLong
+                    logger.lifecycle("File size: ${formatFileSize(fileSize)}")
+                    
+                    connection.getInputStream().use { input ->
+                        FileOutputStream(file).use { output ->
+                            input.copyTo(output)
+                        }
                     }
                 }
+                
+                val totalTime = System.currentTimeMillis() - startTime
+                logger.lifecycle("Download complete in ${formatTime(totalTime)}")
+                
                 DownloadResult(DownloadResultType.SUCCESS, null, file)
             } catch (exception: Exception) {
+                logger.error("Download failed: ${exception.message}")
                 DownloadResult(DownloadResultType.FAILED, exception.message, null)
             }
         }
+    }
+    
+    /**
+     * Format file size to human-readable format
+     */
+    private fun formatFileSize(size: Long): String {
+        if (size <= 0) return "0 B"
+        val units = arrayOf("B", "KB", "MB", "GB", "TB")
+        val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
+        return String.format("%.2f %s", size / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
+    }
+    
+    /**
+     * Format time in milliseconds to human-readable format
+     */
+    private fun formatTime(timeInMs: Long): String {
+        if (timeInMs < 1000) return "$timeInMs ms"
+        return String.format("%.2f s", timeInMs / 1000.0)
     }
 }

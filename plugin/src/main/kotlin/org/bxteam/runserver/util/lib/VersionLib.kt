@@ -1,10 +1,12 @@
 package org.bxteam.runserver.util.lib
 
 import com.google.gson.JsonParser
+import org.gradle.api.logging.Logging
 import java.net.URI
 
 object VersionLib {
     private const val MCJARS_API_BASE = "https://mcjars.app/api/v2"
+    private val logger = Logging.getLogger(VersionLib::class.java)
 
     /**
      * Used to get a list of all supported for `Spigot`.
@@ -90,17 +92,27 @@ object VersionLib {
      * @return A list of available versions
      */
     private fun getMcJarsVersions(type: String): List<String> {
+        logger.lifecycle("Fetching available versions for $type from McJars API...")
         try {
             val url = URI("$MCJARS_API_BASE/builds/$type")
+            logger.debug("Requesting API endpoint: $url")
+            
             val response = JsonParser.parseString(url.toURL().readText()).asJsonObject
-
+            
             if (!response.get("success").asBoolean) {
+                logger.warn("API request was not successful for $type")
                 return emptyList()
             }
 
             val builds = response.getAsJsonObject("builds")
-            return builds.keySet().toList()
+            val versions = builds.keySet().toList()
+            
+            logger.lifecycle("Found ${versions.size} available version(s) for $type")
+            logger.debug("Available versions: $versions")
+            
+            return versions
         } catch (e: Exception) {
+            logger.error("Failed to fetch versions for $type: ${e.message}")
             return emptyList()
         }
     }
