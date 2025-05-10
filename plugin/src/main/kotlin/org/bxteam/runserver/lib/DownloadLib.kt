@@ -1,4 +1,4 @@
-package org.bxteam.runserver.util.lib
+package org.bxteam.runserver.lib
 
 import com.google.gson.JsonParser
 import org.gradle.api.logging.Logging

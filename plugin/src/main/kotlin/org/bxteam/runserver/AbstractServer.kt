@@ -1,8 +1,8 @@
 package org.bxteam.runserver
 
 import com.google.gson.JsonParser
-import org.bxteam.runserver.util.exception.UnsupportedJavaVersionException
-import org.bxteam.runserver.util.lib.TaskLib
+import org.bxteam.runserver.exception.UnsupportedJavaVersionException
+import org.bxteam.runserver.lib.TaskLib
 import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.JavaExec

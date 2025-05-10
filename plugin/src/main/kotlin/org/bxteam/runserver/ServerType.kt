@@ -1,7 +1,7 @@
 package org.bxteam.runserver
 
-import org.bxteam.runserver.util.lib.DownloadLib
-import org.bxteam.runserver.util.lib.VersionLib
+import org.bxteam.runserver.lib.DownloadLib
+import org.bxteam.runserver.lib.VersionLib
 import java.io.File
 
 enum class ServerType(val loaderName: String, val proxy: Boolean) {

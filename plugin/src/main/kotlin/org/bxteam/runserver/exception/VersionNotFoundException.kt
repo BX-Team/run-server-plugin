@@ -1,4 +1,4 @@
-package org.bxteam.runserver.util.exception
+package org.bxteam.runserver.exception
 
 /**
  * Exception thrown specified Minecraft version is not found.

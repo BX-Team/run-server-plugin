@@ -1,4 +1,4 @@
-package org.bxteam.runserver.util.exception
+package org.bxteam.runserver.exception
 
 /**
  * Exception thrown when a custom jar file is not found in `customJarPath` and `run` directories.

@@ -1,4 +1,4 @@
-package org.bxteam.runserver.util.lib
+package org.bxteam.runserver.lib
 
 import java.io.File
 

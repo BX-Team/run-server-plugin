@@ -1,10 +1,11 @@
 package org.bxteam.runserver
 
+import org.bxteam.runserver.exception.VersionNotFoundException
 import org.bxteam.runserver.util.RamAmount
-import org.bxteam.runserver.util.exception.*
-import org.bxteam.runserver.util.lib.DownloadResult
-import org.bxteam.runserver.util.lib.DownloadResultType
-import org.bxteam.runserver.util.lib.TaskLib
+import org.bxteam.runserver.lib.DownloadResult
+import org.bxteam.runserver.lib.DownloadResultType
+import org.bxteam.runserver.lib.PluginLib
+import org.bxteam.runserver.lib.TaskLib
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.text.SimpleDateFormat
@@ -142,13 +143,11 @@ abstract class RunServerTask : AbstractServer() {
         createFolders()
         loadPlugin()
 
-        var download: DownloadResult? = null
-
         logger.lifecycle("\n>> Downloading server JAR <<")
         logger.lifecycle("Server type: ${serverType.name.lowercase()}")
         logger.lifecycle("Minecraft version: $minecraftVersion")
-        
-        download = downloadServerJar()
+
+        val download: DownloadResult? = downloadServerJar()
 
         if (download == null || download.resultType == DownloadResultType.SUCCESS) {
             val jarFile = download?.jarFile ?: File(workingDir, customJarName!!)
@@ -299,3 +298,4 @@ abstract class RunServerTask : AbstractServer() {
         return String.format("%.2f s", timeInMs / 1000.0)
     }
 }
+

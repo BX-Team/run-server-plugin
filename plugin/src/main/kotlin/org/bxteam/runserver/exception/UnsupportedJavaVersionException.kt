@@ -1,4 +1,4 @@
-package org.bxteam.runserver.util.exception
+package org.bxteam.runserver.exception
 
 /**
  * This exception will be throw then the system doesn't have the correct version of java installed.
