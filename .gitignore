@@ -4,4 +4,8 @@
 # Ignore Gradle build output directory
 build
 
+# Ignore IntelliJ IDEA project files
 /.idea/
+
+# Ignore testing run directory
+/testing/run

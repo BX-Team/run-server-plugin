@@ -4,7 +4,7 @@ import com.google.gson.JsonParser
 import java.net.URI
 
 object VersionLib {
-    private const val MCJARS_API_BASE = "https://api.mcjars.app/api/v2"
+    private const val MCJARS_API_BASE = "https://mcjars.app/api/v2"
 
     /**
      * Used to get a list of all supported for `Spigot`.
@@ -91,15 +91,15 @@ object VersionLib {
      */
     private fun getMcJarsVersions(type: String): List<String> {
         try {
-            val url = URI("$MCJARS_API_BASE/versions/$type")
+            val url = URI("$MCJARS_API_BASE/builds/$type")
             val response = JsonParser.parseString(url.toURL().readText()).asJsonObject
 
             if (!response.get("success").asBoolean) {
                 return emptyList()
             }
 
-            val versions = response.getAsJsonArray("versions")
-            return versions.map { it.asString }
+            val builds = response.getAsJsonObject("builds")
+            return builds.keySet().toList()
         } catch (e: Exception) {
             return emptyList()
         }

@@ -6,7 +6,7 @@ import java.io.FileOutputStream
 import java.net.URI
 
 object DownloadLib {
-    private const val MCJARS_API_BASE = "https://api.mcjars.app/api/v2"
+    private const val MCJARS_API_BASE = "https://mcjars.app/api/v2"
 
     /**
      * This method is used to download Spigot.
