@@ -4,8 +4,8 @@ import org.bxteam.runserver.exception.VersionNotFoundException
 import org.bxteam.runserver.util.RamAmount
 import org.bxteam.runserver.lib.DownloadResult
 import org.bxteam.runserver.lib.DownloadResultType
-import org.bxteam.runserver.lib.PluginLib
 import org.bxteam.runserver.lib.TaskLib
+import org.bxteam.runserver.lib.PluginDownloadLib
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.text.SimpleDateFormat
@@ -14,12 +14,12 @@ import java.util.Date
 abstract class RunServerTask : AbstractServer() {
     private var allowedRam: String = "2G"
     private var noGui: Boolean = true
-    private var downloads: MutableList<Pair<String, Boolean>> = mutableListOf()
     private var filePlugins: MutableList<Pair<File, Boolean>> = mutableListOf()
     private var acceptEula: Boolean = false
     private var customJarName: String? = null
     private var inputTask: TaskProvider<*>? = null
     private var debug: Boolean = false
+    private var pluginDownloadLib: PluginDownloadLib? = null
 
     init {
         outputs.upToDateWhen { false }
@@ -58,36 +58,6 @@ abstract class RunServerTask : AbstractServer() {
     fun debugMessage(debug: Boolean) { this.debug = debug }
 
     /**
-     * This is an option to download plugin from an external website.
-     *
-     * @param links The page links to download from.
-     */
-    fun plugins(vararg links: String) { downloads.addAll(links.map { Pair(it, false) }) }
-
-    /**
-     * This is an option to download plugin from an external website.
-     *
-     * @param links The page links to download from and able to set if it will overwrite the old file
-     */
-    fun plugins(links: List<Pair<String, Boolean>>) { downloads.addAll(links) }
-
-    /**
-     * This is an option to download plugin from an external website.
-     *
-     * @param links The page links to download from
-     * @param overwrite If it should overwrite every time
-     */
-    fun plugins(links: List<String>, overwrite: Boolean) { downloads.addAll(links.map { Pair(it, overwrite) }) }
-
-    /**
-     * This is an option to download plugin from an external website.
-     *
-     * @param url The url to the page to down from
-     * @param overwrite If it should overwrite the file everytime
-     */
-    fun plugin(url: String, overwrite: Boolean = false) { downloads.add(Pair(url, overwrite)) }
-
-    /**
      * This is an option to copy a plugin from your disk
      *
      * @param files A list of plugins to copy
@@ -121,6 +91,15 @@ abstract class RunServerTask : AbstractServer() {
      * This will accept the mojang eula for you when start
      */
     fun acceptMojangEula() {acceptEula = true}
+
+    /**
+     * Configure plugin downloads using the new DSL
+     *
+     * @param config The configuration block for plugin downloads
+     */
+    fun downloadPlugins(config: PluginDownloadLib.() -> Unit) {
+        pluginDownloadLib = PluginDownloadLib().apply(config)
+    }
 
     /**
      * This will run when the task is called
@@ -226,6 +205,17 @@ abstract class RunServerTask : AbstractServer() {
         
         pluginFile.copyTo(inServerFile, true)
         logger.lifecycle("Plugin copied successfully")
+
+        pluginDownloadLib?.let { config ->
+            logger.lifecycle("\n>> Downloading configured plugins <<")
+            val results = config.execute(pluginDir!!, serverType)
+            results.forEach { result ->
+                when (result.resultType) {
+                    DownloadResultType.SUCCESS -> logger.lifecycle("Successfully downloaded plugin")
+                    DownloadResultType.FAILED -> logger.error("Failed to download plugin: ${result.errorMessage}")
+                }
+            }
+        }
 
         if (filePlugins.isNotEmpty()) {
             logger.lifecycle("\n>> Copying additional plugins <<")

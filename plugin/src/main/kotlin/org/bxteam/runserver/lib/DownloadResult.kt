@@ -8,8 +8,14 @@ import java.io.File
  * @param resultType If the download was a success or not
  * @param errorMessage If the download failed it will give the error message
  * @param jarFile If the download was a success then this will be the jar file
+ * @param startTime The time when the download started
  */
-data class DownloadResult(val resultType: DownloadResultType, val errorMessage: String?, val jarFile: File?)
+data class DownloadResult(
+    val resultType: DownloadResultType,
+    val errorMessage: String?,
+    val jarFile: File?,
+    val startTime: Long = System.currentTimeMillis()
+)
 
 /**
  * Enum class for the download result

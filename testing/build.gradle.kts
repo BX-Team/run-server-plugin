@@ -11,16 +11,18 @@ version = "1.0.0-SNAPSHOT"
 repositories {
     mavenCentral()
     mavenLocal()
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
-    maven("https://oss.sonatype.org/content/repositories/central")
+    gradlePluginPortal()
 }
 
 tasks {
     runServer {
-        serverType(ServerType.DIVINEMC)
+        serverType(ServerType.PAPER)
         minecraftVersion("1.21.5")
         noGui(true)
         acceptMojangEula()
+        
+        downloadPlugins {
+            url("https://download.luckperms.net/1581/bukkit/loader/LuckPerms-Bukkit-5.4.164.jar")
+        }
     }
 }

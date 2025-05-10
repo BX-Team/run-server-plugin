@@ -110,80 +110,58 @@ object DownloadLib {
 
     /**
      * This method is used to download file from the McJars API.
-     *
-     * @param folder The folder to download the jar to
-     * @param type The type of server to download
-     * @param minecraftVersion The minecraft version target
-     * @return The result of the download operation
      */
     private fun downloadFromMcJarsApi(folder: File, type: String, minecraftVersion: String): DownloadResult {
-        logger.lifecycle("Downloading $type server for Minecraft version $minecraftVersion...")
+        logger.lifecycle("Fetching ${type.lowercase()} builds for version $minecraftVersion...")
         try {
             val url = URI("$MCJARS_API_BASE/builds/$type/$minecraftVersion")
-            logger.debug("Requesting API endpoint: $url")
-            
             val response = JsonParser.parseString(url.toURL().readText()).asJsonObject
 
             if (!response.get("success").asBoolean) {
-                logger.error("API request failed for $type $minecraftVersion")
                 return DownloadResult(DownloadResultType.FAILED, "API request failed", null)
             }
 
             val builds = response.getAsJsonArray("builds")
             if (builds.isEmpty) {
-                logger.error("No builds available for $type $minecraftVersion")
-                return DownloadResult(DownloadResultType.FAILED, "No builds available for $type $minecraftVersion", null)
+                return DownloadResult(DownloadResultType.FAILED, "No builds available", null)
             }
 
-            // Get the first (latest) build
             val latestBuild = builds.get(0).asJsonObject
+            val buildNumber = latestBuild.get("name").asString
             val jarUrl = latestBuild.get("jarUrl").asString
             val outputFileName = type.lowercase() + ".jar"
             
-            logger.lifecycle("Found latest build for $type $minecraftVersion: ${latestBuild.get("name").asString}")
-            logger.lifecycle("Downloading from $jarUrl")
+            logger.lifecycle("Latest build for $minecraftVersion is $buildNumber.")
+            logger.lifecycle("Downloading $type $minecraftVersion build $buildNumber...")
 
-            return downloadFile(folder, jarUrl, outputFileName)
+            val result = downloadFile(folder, jarUrl, outputFileName)
+            if (result.resultType == DownloadResultType.SUCCESS) {
+                logger.lifecycle("Done downloading $type, took ${formatTime(System.currentTimeMillis() - result.startTime)}.")
+            }
+            return result
         } catch (exception: Exception) {
-            logger.error("Download failed: ${exception.message}")
             return DownloadResult(DownloadResultType.FAILED, exception.message, null)
         }
     }
 
     /**
      * This method is used to download a file from an url.
-     *
-     * @param folder The folder to download the jar to
-     * @param downloadURL The url to download from
-     * @param name The name to give the downloaded file
      */
     fun downloadFile(folder: File, downloadURL: String, name: String): DownloadResult =
         downloadFile(folder, URI(downloadURL), name)
 
     /**
      * This method is used to download a file from an url.
-     *
-     * @param folder The folder to download the jar to
-     * @param downloadURL The url to download from
-     * @param name The name to give the downloaded file
-     *
-     * @return This method will return the download result if it fails or not
      */
     private fun downloadFile(folder: File, downloadURL: URI, name: String): DownloadResult {
         val file = File(folder, name)
+        val startTime = System.currentTimeMillis()
 
         return if (file.exists()) {
-            logger.lifecycle("File $name already exists in ${folder.path}, skipping download")
-            DownloadResult(DownloadResultType.SUCCESS, null, file)
+            DownloadResult(DownloadResultType.SUCCESS, null, file, startTime)
         } else {
             try {
-                logger.lifecycle("Downloading file to ${file.absolutePath}")
-                val startTime = System.currentTimeMillis()
-                
                 downloadURL.toURL().openConnection().let { connection ->
-                    val fileSize = connection.contentLengthLong
-                    logger.lifecycle("File size: ${formatFileSize(fileSize)}")
-                    
                     connection.getInputStream().use { input ->
                         FileOutputStream(file).use { output ->
                             input.copyTo(output)
@@ -191,25 +169,11 @@ object DownloadLib {
                     }
                 }
                 
-                val totalTime = System.currentTimeMillis() - startTime
-                logger.lifecycle("Download complete in ${formatTime(totalTime)}")
-                
-                DownloadResult(DownloadResultType.SUCCESS, null, file)
+                DownloadResult(DownloadResultType.SUCCESS, null, file, startTime)
             } catch (exception: Exception) {
-                logger.error("Download failed: ${exception.message}")
-                DownloadResult(DownloadResultType.FAILED, exception.message, null)
+                DownloadResult(DownloadResultType.FAILED, exception.message, null, startTime)
             }
         }
-    }
-    
-    /**
-     * Format file size to human-readable format
-     */
-    private fun formatFileSize(size: Long): String {
-        if (size <= 0) return "0 B"
-        val units = arrayOf("B", "KB", "MB", "GB", "TB")
-        val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
-        return String.format("%.2f %s", size / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
     }
     
     /**
@@ -217,6 +181,6 @@ object DownloadLib {
      */
     private fun formatTime(timeInMs: Long): String {
         if (timeInMs < 1000) return "$timeInMs ms"
-        return String.format("%.2f s", timeInMs / 1000.0)
+        return String.format("%.2fs", timeInMs / 1000.0)
     }
 }
