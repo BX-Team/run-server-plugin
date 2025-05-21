@@ -12,7 +12,7 @@ Gradle plugin for running Minecraft server instances in your IDE
 
 ```groovy
 plugins {
-    id 'org.bxteam.runserver' version '0.1.0'
+    id 'org.bxteam.runserver' version '1.0.0'
 }
 ```
 
@@ -20,7 +20,7 @@ plugins {
 
 ```kotlin
 plugins {
-    id("org.bxteam.runserver") version "0.1.0"
+    id("org.bxteam.runserver") version "1.0.0"
 }
 ```
 
