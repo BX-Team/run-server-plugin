@@ -107,7 +107,7 @@ abstract class RunServerTask : AbstractServer() {
         val startTime = System.currentTimeMillis()
         logger.lifecycle("===== Starting Server Setup =====")
         logger.lifecycle("Time: ${getCurrentTime()}")
-        
+
         if (minecraftVersion == null) {
             throw IllegalArgumentException("Minecraft version is not set. Please set it with the 'minecraftVersion' property.")
         }
@@ -115,7 +115,7 @@ abstract class RunServerTask : AbstractServer() {
         logger.lifecycle("Minecraft Version: $minecraftVersion")
         logger.lifecycle("Server Type: ${serverType.name}")
         logger.lifecycle("Allocated RAM: $allowedRam")
-        
+
         checkServerVersion()
         setup()
         createFolders()
@@ -129,8 +129,8 @@ abstract class RunServerTask : AbstractServer() {
 
         if (download == null || download.resultType == DownloadResultType.SUCCESS) {
             val jarFile = download?.jarFile ?: File(workingDir, customJarName!!)
-            logger.lifecycle("\n>> Server JAR ready: ${jarFile.name} (${formatFileSize(jarFile.length())}) <<")
-            
+            logger.lifecycle("Server JAR ready: ${jarFile.name} (${formatFileSize(jarFile.length())})")
+
             setClass(jarFile)
 
             val slitVersion = minecraftVersion!!.split(".")
@@ -140,7 +140,7 @@ abstract class RunServerTask : AbstractServer() {
             val jvmFlags = mutableListOf("-Xmx$allowedRam")
             if (serverType == ServerType.SPIGOT) jvmFlags.add("-DIReallyKnowWhatIAmDoingISwear")
             if (acceptEula) jvmFlags.add("-Dcom.mojang.eula.agree=true")
-            
+
             logger.lifecycle("\n>> JVM Arguments: ${jvmFlags.joinToString(" ")} <<")
             jvmArgs = jvmFlags
 
@@ -152,7 +152,7 @@ abstract class RunServerTask : AbstractServer() {
                     logger.lifecycle("NoGUI flag not supported in this version")
                 }
             }
-            
+
             val setupTime = System.currentTimeMillis() - startTime
             logger.lifecycle("\n===== Server Setup Complete =====")
             logger.lifecycle("Setup completed in ${formatTime(setupTime)}")
@@ -198,21 +198,41 @@ abstract class RunServerTask : AbstractServer() {
         logger.lifecycle("\n>> Loading project plugin <<")
         val pluginFile = TaskLib.findPluginJar(project, inputTask, this)
         val inServerFile = File(pluginDir!!, pluginFile.name)
-        
+
         logger.lifecycle("Copying plugin: ${pluginFile.name} (${formatFileSize(pluginFile.length())})")
-        logger.lifecycle("Destination: ${inServerFile.absolutePath}")
-        
         pluginFile.copyTo(inServerFile, true)
         logger.lifecycle("Plugin copied successfully")
 
         pluginDownloadLib?.let { config ->
             logger.lifecycle("\n>> Downloading configured plugins <<")
             val results = config.execute(pluginDir!!, serverType)
+
+            val successCount = results.count { it.resultType == DownloadResultType.SUCCESS }
+            val failedCount = results.count { it.resultType == DownloadResultType.FAILED }
+
+            val downloadedPlugins = mutableListOf<String>()
             results.forEach { result ->
-                when (result.resultType) {
-                    DownloadResultType.SUCCESS -> logger.lifecycle("Successfully downloaded plugin")
-                    DownloadResultType.FAILED -> logger.error("Failed to download plugin: ${result.errorMessage}")
+                if (result.resultType == DownloadResultType.SUCCESS && result.jarFile != null) {
+                    downloadedPlugins.add(result.jarFile.name)
                 }
+            }
+
+            val examplePlugins = downloadedPlugins.take(3)
+
+            if (successCount > 0) {
+                val exampleText = if (examplePlugins.isNotEmpty()) {
+                    " including:\n- ${examplePlugins.joinToString("\n- ")}"
+                } else ""
+
+                val otherText = if (successCount > examplePlugins.size) {
+                    "\n- and ${successCount - examplePlugins.size} other(s)"
+                } else ""
+
+                logger.lifecycle("Downloaded $successCount plugin(s) successfully,$exampleText$otherText")
+            }
+
+            if (failedCount > 0) {
+                logger.error("Failed to download $failedCount plugin(s)")
             }
         }
 
@@ -226,41 +246,35 @@ abstract class RunServerTask : AbstractServer() {
      * This will copy the local plugins into the plugin folder
      */
     private fun copyFilePlugins() {
-        filePlugins.forEachIndexed { index, (sourceFile, overwrite) ->
+        val totalPlugins = filePlugins.size
+        val copiedCount = filePlugins.count { (sourceFile, overwrite) ->
             val pluginFile = File(pluginDir!!, sourceFile.name)
-            logger.lifecycle("${index+1}/${filePlugins.size}: Copying ${sourceFile.name} (${formatFileSize(sourceFile.length())})")
-            
-            if (pluginFile.exists() && !overwrite) {
-                logger.lifecycle("  File already exists, skipping (overwrite=false)")
-            } else {
-                sourceFile.copyTo(pluginFile, overwrite)
-                logger.lifecycle("  Copied successfully" + if(overwrite) " (overwritten)" else "")
-            }
+            sourceFile.copyTo(pluginFile, overwrite)
+            true
         }
+
+        logger.lifecycle("Copied $copiedCount/$totalPlugins additional plugin(s)")
     }
 
     /**
      * This will be creating all the folder for the server
      */
-    private fun createFolders(){
+    private fun createFolders() {
         logger.lifecycle("\n>> Creating server directories <<")
+
         if (!runDir!!.exists()) {
-            logger.lifecycle("Creating server directory: ${runDir!!.absolutePath}")
             runDir!!.mkdirs()
-        } else {
-            logger.lifecycle("Server directory exists: ${runDir!!.absolutePath}")
         }
-        
+
         if (!pluginDir!!.exists()) {
-            logger.lifecycle("Creating plugins directory: ${pluginDir!!.absolutePath}")
             pluginDir!!.mkdirs()
-        } else {
-            logger.lifecycle("Plugins directory exists: ${pluginDir!!.absolutePath}")
         }
-        
-        logger.lifecycle("Directories ready")
+
+        logger.lifecycle("Server and plugins directories ready at:")
+        logger.lifecycle("- ${runDir!!.absolutePath}")
+        logger.lifecycle("- ${pluginDir!!.absolutePath}")
     }
-    
+
     /**
      * Get current formatted time
      */
@@ -268,7 +282,7 @@ abstract class RunServerTask : AbstractServer() {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         return dateFormat.format(Date())
     }
-    
+
     /**
      * Format file size to human-readable format
      */
@@ -278,7 +292,7 @@ abstract class RunServerTask : AbstractServer() {
         val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
         return String.format("%.2f %s", size / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
     }
-    
+
     /**
      * Format time in milliseconds to human-readable format
      */
@@ -287,4 +301,3 @@ abstract class RunServerTask : AbstractServer() {
         return String.format("%.2f s", timeInMs / 1000.0)
     }
 }
-
