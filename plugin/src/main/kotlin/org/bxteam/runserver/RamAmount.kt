@@ -1,4 +1,4 @@
-package org.bxteam.runserver.util
+package org.bxteam.runserver
 
 enum class RamAmount(val flag: String) {
     /**

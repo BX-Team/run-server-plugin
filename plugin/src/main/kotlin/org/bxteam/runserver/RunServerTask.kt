@@ -1,7 +1,6 @@
 package org.bxteam.runserver
 
 import org.bxteam.runserver.exception.VersionNotFoundException
-import org.bxteam.runserver.util.RamAmount
 import org.bxteam.runserver.lib.DownloadResult
 import org.bxteam.runserver.lib.DownloadResultType
 import org.bxteam.runserver.lib.TaskLib
