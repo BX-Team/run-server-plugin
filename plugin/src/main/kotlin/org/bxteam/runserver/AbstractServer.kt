@@ -95,7 +95,7 @@ abstract class AbstractServer : JavaExec() {
     /**
      * Checks and depends on the correct tasks
      */
-    protected fun dependOnTasks() {
+    private fun dependOnTasks() {
         if (TaskLib.TaskNames.REMAP in project.tasks.names) {
             setDependsOn(mutableListOf(project.tasks.named(TaskLib.TaskNames.REMAP)))
         } else if (TaskLib.TaskNames.SHADOW in project.tasks.names) {
@@ -132,4 +132,4 @@ abstract class AbstractServer : JavaExec() {
  * @param buildFolder The build folder of your project
  * @since 1.0.0
  */
-class FolderData(val minecraftVersion: String?, val serverType: ServerType, val buildFolder: File)
+class FolderData(private val minecraftVersion: String?, private val serverType: ServerType, private val buildFolder: File)
