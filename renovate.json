@@ -3,7 +3,6 @@
   "extends": [
     "config:recommended"
   ],
-  "automerge": true,
   "labels": [
     "\uD83D\uDD04 dependencies"
   ]
