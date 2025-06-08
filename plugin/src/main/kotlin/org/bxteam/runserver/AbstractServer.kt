@@ -84,6 +84,7 @@ abstract class AbstractServer : JavaExec() {
      */
     protected fun setup() {
         standardInput = System.`in`
+        systemProperty("file.encoding", "UTF-8")
         if (runDir == null) {
             runDir = File(project.layout.projectDirectory.asFile, "run${if (versionFolder) "/$minecraftVersion" else ""}/${serverType.name.lowercase()}")
         }
