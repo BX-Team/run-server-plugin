@@ -26,6 +26,11 @@ class PluginDownloadLib {
         )
 
         /**
+         * Constants for Jenkins downloads
+         */
+        internal const val JENKINS_LAST_SUCCESSFUL_BUILD = "lastSuccessfulBuild"
+
+        /**
          * Check if a server type is compatible with a loader
          */
         internal fun isCompatible(serverType: ServerType, loader: String): Boolean {
@@ -64,6 +69,16 @@ class PluginDownloadLib {
      */
     fun hangar(projectId: String, version: String) {
         downloads.add(HangarDownload(projectId, version))
+    }
+
+    /**
+     * Add a Jenkins plugin download
+     * @param jenkinsUrl The base URL of the Jenkins server
+     * @param jobName The name of the Jenkins job
+     * @param artifactPattern A regex pattern to match the artifact to download
+     */
+    fun jenkins(jenkinsUrl: String, jobName: String, artifactPattern: Regex) {
+        downloads.add(JenkinsDownload(jenkinsUrl, jobName, artifactPattern))
     }
 
     /**
@@ -189,6 +204,69 @@ data class HangarDownload(
             return result
         } catch (e: Exception) {
             return DownloadResult(DownloadResultType.FAILED, "Failed to download from Hangar: ${e.message}", null)
+        }
+    }
+}
+
+/**
+ * Jenkins plugin download
+ */
+data class JenkinsDownload(
+    val jenkinsUrl: String,
+    val jobName: String,
+    val artifactPattern: Regex
+) : PluginDownload {
+    override fun download(folder: File, serverType: ServerType): DownloadResult {
+        try {
+            val baseUrl = jenkinsUrl.trimEnd('/')
+            val apiUrl = "$baseUrl/job/$jobName/${PluginDownloadLib.JENKINS_LAST_SUCCESSFUL_BUILD}/api/json?tree=artifacts[relativePath]"
+
+            println("Fetching artifacts from Jenkins: $apiUrl")
+            val response = JsonParser.parseString(URI(apiUrl).toURL().readText()).asJsonObject
+            val artifacts = response.getAsJsonArray("artifacts")
+
+            if (artifacts.isEmpty) {
+                return DownloadResult(
+                    DownloadResultType.FAILED,
+                    "No artifacts found for Jenkins job: $jobName",
+                    null
+                )
+            }
+
+            val matchingArtifact = artifacts.firstOrNull {
+                val relativePath = it.asJsonObject.get("relativePath").asString
+                artifactPattern.containsMatchIn(relativePath)
+            }
+
+            if (matchingArtifact == null) {
+                val availableArtifacts = artifacts.joinToString("\n- ", prefix = "\nAvailable artifacts:\n- ") {
+                    it.asJsonObject.get("relativePath").asString
+                }
+
+                return DownloadResult(
+                    DownloadResultType.FAILED,
+                    "No artifacts matching pattern '${artifactPattern.pattern}' found for Jenkins job: $jobName$availableArtifacts",
+                    null
+                )
+            }
+
+            val relativePath = matchingArtifact.asJsonObject.get("relativePath").asString
+            val fileName = relativePath.substringAfterLast("/")
+            val downloadUrl = "$baseUrl/job/$jobName/${PluginDownloadLib.JENKINS_LAST_SUCCESSFUL_BUILD}/artifact/$relativePath"
+
+            println("Downloading Jenkins artifact: $fileName from $jobName...")
+            val result = DownloadLib.downloadFile(folder, downloadUrl, fileName)
+            if (result.resultType == DownloadResultType.SUCCESS) {
+                println("Done downloading Jenkins artifact: $fileName, took ${formatTime(System.currentTimeMillis() - result.startTime)}.")
+            }
+            return result
+
+        } catch (e: Exception) {
+            return DownloadResult(
+                DownloadResultType.FAILED,
+                "Failed to download from Jenkins: ${e.message}",
+                null
+            )
         }
     }
 }

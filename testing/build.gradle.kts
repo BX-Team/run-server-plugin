@@ -28,7 +28,8 @@ tasks {
         acceptMojangEula()
 
         downloadPlugins {
-            url("https://download.luckperms.net/1581/bukkit/loader/LuckPerms-Bukkit-5.4.164.jar")
+            url("https://download.luckperms.net/1587/bukkit/loader/LuckPerms-Bukkit-5.5.2.jar")
+            jenkins("https://ci.athion.net", "FastAsyncWorldEdit", Regex("Bukkit"))
         }
     }
 }

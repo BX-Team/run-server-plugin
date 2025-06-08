@@ -77,6 +77,9 @@ tasks {
             // Hangar plugins
             hangar("squaremap", "1.3.5")
             
+            // Jenkins artifacts (only latest builds)
+            jenkins("https://ci.athion.net", "FastAsyncWorldEdit", Regex("Bukkit"))
+            
             // Direct URL downloads
             url("https://download.luckperms.net/1581/bukkit/loader/LuckPerms-Bukkit-5.4.164.jar")
         }
