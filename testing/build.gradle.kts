@@ -23,7 +23,7 @@ dependencies {
 tasks {
     runServer {
         serverType(ServerType.PAPER)
-        minecraftVersion("1.21.5")
+        serverVersion("1.21.7")
         noGui(true)
         acceptMojangEula()
 

@@ -108,11 +108,11 @@ abstract class RunServerTask : AbstractServer() {
         logger.lifecycle("===== Starting Server Setup =====")
         logger.lifecycle("Time: ${getCurrentTime()}")
 
-        if (minecraftVersion == null) {
+        if (serverVersion == null) {
             throw IllegalArgumentException("Minecraft version is not set. Please set it with the 'minecraftVersion' property.")
         }
 
-        logger.lifecycle("Minecraft Version: $minecraftVersion")
+        logger.lifecycle("Minecraft Version: $serverVersion")
         logger.lifecycle("Server Type: ${serverType.name}")
         logger.lifecycle("Allocated RAM: $allowedRam")
 
@@ -123,7 +123,7 @@ abstract class RunServerTask : AbstractServer() {
 
         logger.lifecycle("\n>> Downloading server JAR <<")
         logger.lifecycle("Server type: ${serverType.name.lowercase()}")
-        logger.lifecycle("Minecraft version: $minecraftVersion")
+        logger.lifecycle("Minecraft version: $serverVersion")
 
         val download: DownloadResult? = downloadServerJar()
 
@@ -133,7 +133,7 @@ abstract class RunServerTask : AbstractServer() {
 
             setClass(jarFile)
 
-            val slitVersion = minecraftVersion!!.split(".")
+            val slitVersion = serverVersion!!.split(".")
             val mainVersion = slitVersion[1].toInt()
             val subVersion = slitVersion.getOrNull(2)?.toIntOrNull() ?: 0
 
@@ -175,11 +175,11 @@ abstract class RunServerTask : AbstractServer() {
         serverType.versions().let {
             if (it.isEmpty()) {
                 logger.warn("Couldn't retrieve version list, assuming version is compatible")
-            } else if (minecraftVersion !in it) {
-                logger.error("Version $minecraftVersion not found in available versions: $it")
-                throw VersionNotFoundException(minecraftVersion!!, it)
+            } else if (serverVersion !in it) {
+                logger.error("Version $serverVersion not found in available versions: $it")
+                throw VersionNotFoundException(serverVersion!!, it)
             } else {
-                logger.lifecycle("Version $minecraftVersion is available for ${serverType.name}")
+                logger.lifecycle("Version $serverVersion is available for ${serverType.name}")
             }
         }
     }
@@ -189,7 +189,7 @@ abstract class RunServerTask : AbstractServer() {
      *
      * @return The download result if it was success or not
      */
-    private fun downloadServerJar(): DownloadResult? = serverType.downloadJar(minecraftVersion!!, workingDir)
+    private fun downloadServerJar(): DownloadResult? = serverType.downloadJar(serverVersion!!, workingDir)
 
     /**
      * This method will load your plugin and download the rest from the websites or copy them

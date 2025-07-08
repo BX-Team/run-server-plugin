@@ -18,7 +18,7 @@ abstract class AbstractServer : JavaExec() {
     @get:Internal
     protected var serverType: ServerType = ServerType.SPIGOT
     @get:Internal
-    protected var minecraftVersion: String? = null
+    protected var serverVersion: String? = null
 
     @get:Internal
     protected var versionFolder: Boolean = false
@@ -33,12 +33,12 @@ abstract class AbstractServer : JavaExec() {
     /**
      * The minecraft version the server should run
      *
-     * @param minecraftVersion The minecraft version
+     * @param serverVersion The minecraft version
      */
-    fun minecraftVersion(minecraftVersion: String) {
-        this.minecraftVersion = minecraftVersion
+    fun serverVersion(serverVersion: String) {
+        this.serverVersion = serverVersion
         dependOnTasks()
-        if (!serverType.proxy) checkJavaVersion(minecraftVersion, javaVersion)
+        if (!serverType.proxy) checkJavaVersion(serverVersion, javaVersion)
     }
 
     /**
@@ -46,7 +46,7 @@ abstract class AbstractServer : JavaExec() {
      *
      * @param folder This gives you the folder data and returns the file to place the server folder
      */
-    fun serverFolder(folder: (FolderData).() -> File) { runDir = folder(FolderData(minecraftVersion, serverType, project.layout.projectDirectory.asFile)) }
+    fun serverFolder(folder: (FolderData).() -> File) { runDir = folder(FolderData(serverVersion, serverType, project.layout.projectDirectory.asFile)) }
 
     /**
      * This option allowed you to set the folder where the server is running
@@ -54,7 +54,7 @@ abstract class AbstractServer : JavaExec() {
      * @param folder This gives you the folder data and returns the file to place the server folder
      */
     fun serverFolderName(folder: (FolderData).() -> String) { runDir = File(project.layout.projectDirectory.asFile, folder(
-        FolderData(minecraftVersion, serverType, project.layout.projectDirectory.asFile)
+        FolderData(serverVersion, serverType, project.layout.projectDirectory.asFile)
     )) }
 
     /**
@@ -86,7 +86,7 @@ abstract class AbstractServer : JavaExec() {
         standardInput = System.`in`
         systemProperty("file.encoding", "UTF-8")
         if (runDir == null) {
-            runDir = File(project.layout.projectDirectory.asFile, "run${if (versionFolder) "/$minecraftVersion" else ""}/${serverType.name.lowercase()}")
+            runDir = File(project.layout.projectDirectory.asFile, "run${if (versionFolder) "/$serverVersion" else ""}/${serverType.name.lowercase()}")
         }
         pluginDir = File(runDir, "plugins")
         workingDir(runDir!!.path)
@@ -108,8 +108,8 @@ abstract class AbstractServer : JavaExec() {
     /**
      * Throws a [UnsupportedJavaVersionException] if the correct Java version is not used.
      */
-    private fun checkJavaVersion(minecraftVersion: String, javaVersion: JavaVersion) {
-        val uri = URI.create("https://hub.spigotmc.org/versions/$minecraftVersion.json").toURL()
+    private fun checkJavaVersion(serverVersion: String, javaVersion: JavaVersion) {
+        val uri = URI.create("https://hub.spigotmc.org/versions/$serverVersion.json").toURL()
         val response = JsonParser.parseString(uri.readText()).asJsonObject
 
         val versionsArray = response["javaVersions"].asJsonArray
@@ -127,9 +127,9 @@ abstract class AbstractServer : JavaExec() {
 /**
  * The folder data that is giving when selecting the folder to make the server go to.
  *
- * @param minecraftVersion The minecraft version the server is running
+ * @param serverVersion The version the server is running
  * @param serverType The server type that its running
  * @param buildFolder The build folder of your project
  * @since 1.0.0
  */
-class FolderData(private val minecraftVersion: String?, private val serverType: ServerType, private val buildFolder: File)
+class FolderData(private val serverVersion: String?, private val serverType: ServerType, private val buildFolder: File)
