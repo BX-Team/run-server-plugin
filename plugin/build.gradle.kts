@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.bxteam"
-version = "1.1.0"
+version = "1.2.0"
 description = "Gradle plugin for running Minecraft server instances in your IDE"
 
 repositories {
