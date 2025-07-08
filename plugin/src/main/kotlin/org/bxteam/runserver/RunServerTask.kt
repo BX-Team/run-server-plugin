@@ -15,9 +15,7 @@ abstract class RunServerTask : AbstractServer() {
     private var noGui: Boolean = true
     private var filePlugins: MutableList<Pair<File, Boolean>> = mutableListOf()
     private var acceptEula: Boolean = false
-    private var customJarName: String? = null
     private var inputTask: TaskProvider<*>? = null
-    private var debug: Boolean = false
     private var pluginDownloadLib: PluginDownloadLib? = null
 
     init {
@@ -50,11 +48,6 @@ abstract class RunServerTask : AbstractServer() {
      * @param boolean allow or disallow
      */
     fun noGui(boolean: Boolean) { noGui = boolean }
-
-    /**
-     * This option will throw out exceptions
-     */
-    fun debugMessage(debug: Boolean) { this.debug = debug }
 
     /**
      * This is an option to copy a plugin from your disk
@@ -128,7 +121,7 @@ abstract class RunServerTask : AbstractServer() {
         val download: DownloadResult? = downloadServerJar()
 
         if (download == null || download.resultType == DownloadResultType.SUCCESS) {
-            val jarFile = download?.jarFile ?: File(workingDir, customJarName!!)
+            val jarFile = download?.jarFile ?: throw IllegalStateException("Server JAR download failed and no fallback JAR available")
             logger.lifecycle("Server JAR ready: ${jarFile.name} (${formatFileSize(jarFile.length())})")
 
             setClass(jarFile)

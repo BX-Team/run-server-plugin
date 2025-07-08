@@ -32,7 +32,7 @@ plugins {
 tasks {
     runServer {
         serverType(ServerType.PAPER)
-        minecraftVersion("1.21.5")
+        serverVersion("1.21.7")
         noGui(true)
         acceptMojangEula()
 
@@ -50,7 +50,7 @@ tasks {
     runServer {
         // Server type and version
         serverType(ServerType.PAPER)
-        minecraftVersion("1.21.5")
+        serverVersion("1.21.7")
         
         // RAM configuration
         allowedRam(4, RamAmount.GB) // Allocate 4GB of RAM
@@ -62,9 +62,6 @@ tasks {
         
         // EULA acceptance
         acceptMojangEula() // Automatically accept Mojang EULA
-        
-        // Debug mode
-        debugMessage(true) // Enable debug messages
         
         // Plugin downloads using the new DSL
         downloadPlugins {
