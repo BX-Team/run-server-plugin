@@ -138,4 +138,5 @@ We're using [MCJars API](https://mcjars.app/api) to download and check the serve
 - Leaves
 - Bungeecord
 - Velocity
+- Velocity-CTD
 - Waterfall

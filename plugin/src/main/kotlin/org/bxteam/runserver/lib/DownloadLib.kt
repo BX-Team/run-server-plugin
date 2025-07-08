@@ -100,6 +100,15 @@ object DownloadLib {
         downloadFromMcJarsApi(folder, "VELOCITY", minecraftVersion)
 
     /**
+     * This method is used to download Velocity-CTD proxy.
+     *
+     * @param folder The folder to download the jar to
+     * @param minecraftVersion The minecraft version target
+     */
+    fun velocityCtd(folder: File, minecraftVersion: String) =
+        downloadFromMcJarsApi(folder, "VELOCITY_CTD", minecraftVersion)
+
+    /**
      * This method is used to download Waterfall proxy.
      *
      * @param folder The folder to download the jar to

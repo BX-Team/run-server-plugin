@@ -79,6 +79,13 @@ object VersionLib {
     fun velocity(): List<String> = getMcJarsVersions("VELOCITY")
 
     /**
+     * Used to get a list of all supported for `Velocity-CTD`.
+     *
+     * @return A list of all supported versions for `Velocity-CTD`.
+     */
+    fun velocityCtd(): List<String> = getMcJarsVersions("VELOCITY_CTD")
+
+    /**
      * Used to get a list of all supported for `Waterfall`.
      *
      * @return A list of all supported versions for `Waterfall`.

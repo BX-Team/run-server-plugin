@@ -15,6 +15,7 @@ enum class ServerType(val loaderName: String, val proxy: Boolean) {
     LEAVES("leaves", false),
     BUNGEECORD("bungeecord", true),
     VELOCITY("velocity", true),
+    VELOCITY_CTD("velocity-ctd", true),
     WATERFALL("waterfall", true);
 
     /**
@@ -35,6 +36,7 @@ enum class ServerType(val loaderName: String, val proxy: Boolean) {
             LEAVES -> DownloadLib.leaves(directory, mcVersion)
             BUNGEECORD -> DownloadLib.bungeecord(directory)
             VELOCITY -> DownloadLib.velocity(directory, mcVersion)
+            VELOCITY_CTD -> DownloadLib.velocityCtd(directory, mcVersion)
             WATERFALL -> DownloadLib.waterfall(directory, mcVersion)
         }
 
@@ -53,6 +55,7 @@ enum class ServerType(val loaderName: String, val proxy: Boolean) {
             LEAVES -> VersionLib.leaves()
             BUNGEECORD -> VersionLib.bungeecord()
             VELOCITY -> VersionLib.velocity()
+            VELOCITY_CTD -> VersionLib.velocityCtd()
             WATERFALL -> VersionLib.waterfall()
         }
 }
