@@ -3,9 +3,9 @@ package org.bxteam.runserver
 import org.bxteam.runserver.exception.VersionNotFoundException
 import org.bxteam.runserver.lib.DownloadResult
 import org.bxteam.runserver.lib.DownloadResultType
-import org.bxteam.runserver.lib.TaskLib
 import org.bxteam.runserver.lib.PluginDownloadLib
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.file.RegularFileProperty
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -15,7 +15,7 @@ abstract class RunServerTask : AbstractServer() {
     private var noGui: Boolean = true
     private var filePlugins: MutableList<Pair<File, Boolean>> = mutableListOf()
     private var acceptEula: Boolean = false
-    private var inputTask: TaskProvider<*>? = null
+    private var customInputJarFile: RegularFileProperty = project.objects.fileProperty()
     private var pluginDownloadLib: PluginDownloadLib? = null
 
     init {
@@ -28,7 +28,7 @@ abstract class RunServerTask : AbstractServer() {
      * @param task The new input task
      */
     fun inputTask(task: TaskProvider<*>) {
-        inputTask = task
+        customInputJarFile.set(task.flatMap { project.layout.file(project.provider { it.outputs.files.singleFile }) })
         setDependsOn(mutableListOf(task))
     }
 
@@ -189,7 +189,11 @@ abstract class RunServerTask : AbstractServer() {
      */
     private fun loadPlugin() {
         logger.lifecycle("\n>> Loading project plugin <<")
-        val pluginFile = TaskLib.findPluginJar(project, inputTask, this)
+        val pluginFile = if (customInputJarFile.isPresent) {
+            customInputJarFile.asFile.get()
+        } else {
+            pluginJarFile.asFile.get()
+        }
         val inServerFile = File(pluginDir!!, pluginFile.name)
 
         logger.lifecycle("Copying plugin: ${pluginFile.name} (${formatFileSize(pluginFile.length())})")
