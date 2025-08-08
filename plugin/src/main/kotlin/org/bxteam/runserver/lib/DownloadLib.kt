@@ -14,116 +14,116 @@ object DownloadLib {
      * This method is used to download Spigot.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun spigot(folder: File, minecraftVersion: String) =
-        downloadFromMcJarsApi(folder, "SPIGOT", minecraftVersion)
+    fun spigot(folder: File, serverVersion: String) =
+        downloadFromMcJarsApi(folder, "SPIGOT", serverVersion)
 
     /**
      * This method is used to download PaperMC.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun paper(folder: File, minecraftVersion: String) =
-        downloadFromMcJarsApi(folder, "PAPER", minecraftVersion)
+    fun paper(folder: File, serverVersion: String) =
+        downloadFromMcJarsApi(folder, "PAPER", serverVersion)
 
     /**
      * This method is used to download Pufferfish.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun pufferfish(folder: File, minecraftVersion: String): DownloadResult =
-        downloadFromMcJarsApi(folder, "PUFFERFISH", minecraftVersion)
+    fun pufferfish(folder: File, serverVersion: String): DownloadResult =
+        downloadFromMcJarsApi(folder, "PUFFERFISH", serverVersion)
 
     /**
      * This method is used to download Purpur.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun purpur(folder: File, minecraftVersion: String): DownloadResult =
-        downloadFromMcJarsApi(folder, "PURPUR", minecraftVersion)
+    fun purpur(folder: File, serverVersion: String): DownloadResult =
+        downloadFromMcJarsApi(folder, "PURPUR", serverVersion)
 
     /**
      * This method is used to download Canvas.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun canvas(folder: File, minecraftVersion: String): DownloadResult =
-        downloadFromMcJarsApi(folder, "CANVAS", minecraftVersion)
+    fun canvas(folder: File, serverVersion: String): DownloadResult =
+        downloadFromMcJarsApi(folder, "CANVAS", serverVersion)
 
     /**
      * This method is used to download DivineMC.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun divinemc(folder: File, minecraftVersion: String): DownloadResult =
-        downloadFromMcJarsApi(folder, "DIVINEMC", minecraftVersion)
+    fun divinemc(folder: File, serverVersion: String): DownloadResult =
+        downloadFromMcJarsApi(folder, "DIVINEMC", serverVersion)
 
     /**
      * This method is used to download Leaf.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun leaf(folder: File, minecraftVersion: String): DownloadResult =
-        downloadFromMcJarsApi(folder, "LEAF", minecraftVersion)
+    fun leaf(folder: File, serverVersion: String): DownloadResult =
+        downloadFromMcJarsApi(folder, "LEAF", serverVersion)
 
     /**
      * This method is used to download Leaves.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun leaves(folder: File, minecraftVersion: String): DownloadResult =
-        downloadFromMcJarsApi(folder, "LEAVES", minecraftVersion)
+    fun leaves(folder: File, serverVersion: String): DownloadResult =
+        downloadFromMcJarsApi(folder, "LEAVES", serverVersion)
 
     /**
      * This method is used to download Bungeecord proxy.
      *
      * @param folder The folder to download the jar to
      */
-    fun bungeecord(folder: File): DownloadResult =
-        downloadFromMcJarsApi(folder, "BUNGEECORD", "latest")
+    fun bungeecord(folder: File, serverVersion: String): DownloadResult =
+        downloadFromMcJarsApi(folder, "BUNGEECORD", serverVersion)
 
     /**
      * This method is used to download Velocity proxy.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun velocity(folder: File, minecraftVersion: String) =
-        downloadFromMcJarsApi(folder, "VELOCITY", minecraftVersion)
+    fun velocity(folder: File, serverVersion: String) =
+        downloadFromMcJarsApi(folder, "VELOCITY", serverVersion)
 
     /**
      * This method is used to download Velocity-CTD proxy.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun velocityCtd(folder: File, minecraftVersion: String) =
-        downloadFromMcJarsApi(folder, "VELOCITY_CTD", minecraftVersion)
+    fun velocityCtd(folder: File, serverVersion: String) =
+        downloadFromMcJarsApi(folder, "VELOCITY_CTD", serverVersion)
 
     /**
      * This method is used to download Waterfall proxy.
      *
      * @param folder The folder to download the jar to
-     * @param minecraftVersion The minecraft version target
+     * @param serverVersion The minecraft version target
      */
-    fun waterfall(folder: File, minecraftVersion: String) =
-        downloadFromMcJarsApi(folder, "WATERFALL", minecraftVersion)
+    fun waterfall(folder: File, serverVersion: String) =
+        downloadFromMcJarsApi(folder, "WATERFALL", serverVersion)
 
     /**
      * This method is used to download file from the McJars API.
      */
-    private fun downloadFromMcJarsApi(folder: File, type: String, minecraftVersion: String): DownloadResult {
-        logger.lifecycle("Fetching ${type.lowercase()} builds for version $minecraftVersion...")
+    private fun downloadFromMcJarsApi(folder: File, type: String, serverVersion: String): DownloadResult {
+        logger.lifecycle("Fetching ${type.lowercase()} builds for version $serverVersion...")
         try {
-            val url = URI("$MCJARS_API_BASE/builds/$type/$minecraftVersion")
+            val url = URI("$MCJARS_API_BASE/builds/$type/$serverVersion")
             val response = JsonParser.parseString(url.toURL().readText()).asJsonObject
 
             if (!response.get("success").asBoolean) {
@@ -140,8 +140,8 @@ object DownloadLib {
             val jarUrl = latestBuild.get("jarUrl").asString
             val outputFileName = type.lowercase() + ".jar"
             
-            logger.lifecycle("Latest build for $minecraftVersion is $buildNumber.")
-            logger.lifecycle("Downloading $type $minecraftVersion build $buildNumber...")
+            logger.lifecycle("Latest build for $serverVersion is $buildNumber.")
+            logger.lifecycle("Downloading $type $serverVersion build $buildNumber...")
 
             val result = downloadFile(folder, jarUrl, outputFileName)
             if (result.resultType == DownloadResultType.SUCCESS) {
@@ -154,13 +154,13 @@ object DownloadLib {
     }
 
     /**
-     * This method is used to download a file from an url.
+     * This method is used to download a file from a url.
      */
     fun downloadFile(folder: File, downloadURL: String, name: String): DownloadResult =
         downloadFile(folder, URI(downloadURL), name)
 
     /**
-     * This method is used to download a file from an url.
+     * This method is used to download a file from a url.
      */
     private fun downloadFile(folder: File, downloadURL: URI, name: String): DownloadResult {
         val file = File(folder, name)

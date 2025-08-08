@@ -21,23 +21,23 @@ enum class ServerType(val loaderName: String, val proxy: Boolean) {
     /**
      * Used to download a Jar from a `ServerType`.
      *
-     * @param mcVersion The Minecraft server version.
+     * @param serverVersion The server version.
      * @param directory The directory in which it will be saved in.
      */
-    fun downloadJar(mcVersion: String, directory: File) =
+    fun downloadJar(serverVersion: String, directory: File) =
         when(this) {
-            SPIGOT -> DownloadLib.spigot(directory, mcVersion)
-            PAPER -> DownloadLib.paper(directory, mcVersion)
-            PUFFERFISH -> DownloadLib.pufferfish(directory, mcVersion)
-            PURPUR -> DownloadLib.purpur(directory, mcVersion)
-            CANVAS -> DownloadLib.canvas(directory, mcVersion)
-            DIVINEMC -> DownloadLib.divinemc(directory, mcVersion)
-            LEAF -> DownloadLib.leaf(directory, mcVersion)
-            LEAVES -> DownloadLib.leaves(directory, mcVersion)
-            BUNGEECORD -> DownloadLib.bungeecord(directory)
-            VELOCITY -> DownloadLib.velocity(directory, mcVersion)
-            VELOCITY_CTD -> DownloadLib.velocityCtd(directory, mcVersion)
-            WATERFALL -> DownloadLib.waterfall(directory, mcVersion)
+            SPIGOT -> DownloadLib.spigot(directory, serverVersion)
+            PAPER -> DownloadLib.paper(directory, serverVersion)
+            PUFFERFISH -> DownloadLib.pufferfish(directory, serverVersion)
+            PURPUR -> DownloadLib.purpur(directory, serverVersion)
+            CANVAS -> DownloadLib.canvas(directory, serverVersion)
+            DIVINEMC -> DownloadLib.divinemc(directory, serverVersion)
+            LEAF -> DownloadLib.leaf(directory, serverVersion)
+            LEAVES -> DownloadLib.leaves(directory, serverVersion)
+            BUNGEECORD -> DownloadLib.bungeecord(directory, serverVersion)
+            VELOCITY -> DownloadLib.velocity(directory, serverVersion)
+            VELOCITY_CTD -> DownloadLib.velocityCtd(directory, serverVersion)
+            WATERFALL -> DownloadLib.waterfall(directory, serverVersion)
         }
 
     /**
