@@ -12,7 +12,7 @@ Gradle plugin for running Minecraft server instances in your IDE
 
 ```groovy
 plugins {
-    id 'org.bxteam.runserver' version '1.2.1'
+    id 'org.bxteam.runserver' version '1.2.2'
 }
 ```
 
@@ -20,7 +20,7 @@ plugins {
 
 ```kotlin
 plugins {
-    id("org.bxteam.runserver") version "1.2.1"
+    id("org.bxteam.runserver") version "1.2.2"
 }
 ```
 
@@ -32,7 +32,7 @@ plugins {
 tasks {
     runServer {
         serverType(ServerType.PAPER)
-        serverVersion("1.21.7")
+        serverVersion("1.21.8")
         noGui(true)
         acceptMojangEula()
 
@@ -50,7 +50,7 @@ tasks {
     runServer {
         // Server type and version
         serverType(ServerType.PAPER)
-        serverVersion("1.21.7")
+        serverVersion("1.21.8")
         
         // RAM configuration
         allowedRam(4, RamAmount.GB) // Allocate 4GB of RAM
