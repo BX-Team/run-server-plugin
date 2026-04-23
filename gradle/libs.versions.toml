@@ -5,5 +5,5 @@ minecraft = "1.21.5-R0.1-SNAPSHOT"
 gradle-plugin-publish = { id = "com.gradle.plugin-publish", version = "2.0.0" }
 
 [libraries]
-gson = { module = "com.google.code.gson:gson", version = "2.13.1" }
+gson = { module = "com.google.code.gson:gson", version = "2.14.0" }
 spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "minecraft" }
