@@ -2,7 +2,7 @@
 minecraft = "1.21.5-R0.1-SNAPSHOT"
 
 [plugins]
-gradle-plugin-publish = { id = "com.gradle.plugin-publish", version = "2.0.0" }
+gradle-plugin-publish = { id = "com.gradle.plugin-publish", version = "2.2.1" }
 
 [libraries]
 gson = { module = "com.google.code.gson:gson", version = "2.13.1" }
